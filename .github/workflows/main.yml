@@ -64,8 +64,8 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
             ${{ env.DOCKER_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: "type=gha"
+          cache-to: "type=gha,mode=max"
           
       - name: Image digest
         run: echo "Docker image pushed successfully with tag ${{ github.run_number }}"
