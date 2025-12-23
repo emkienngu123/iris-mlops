@@ -7,7 +7,7 @@ from typing import List
 import os
 
 app = FastAPI(title="Iris Classification API", version="1.0.0")
-# Load model ##$##
+# Load model ##$###
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "iris_model.pkl")
 model = None
 
