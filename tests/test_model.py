@@ -11,8 +11,8 @@ from sklearn.ensemble import RandomForestClassifier
 
 # Add src directory to path to import train_model
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from train_model import train_and_save_model
-
+from train_model import train_and_save_model, train_xgboost_model
+import xgboost as xgb
 
 class TestModelTraining:
     """Test suite for model training"""
@@ -99,6 +99,55 @@ class TestModelTraining:
         assert model.random_state == 42
         assert model.n_classes_ == 3
         assert model.n_features_in_ == 4  # Iris has 4 features
+
+class TestXGBoostTraining:
+    """Test suite for XGBoost model training"""
+    
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(self):
+        """Setup and cleanup for each test"""
+        os.makedirs("models", exist_ok=True)
+        yield
+
+    def test_train_xgboost_success(self):
+        """Test training XGBoost model successfully"""
+        accuracy = train_xgboost_model()
+        assert accuracy is not None
+        assert isinstance(accuracy, (float, np.floating))
+        assert 0 <= accuracy <= 1
+
+    def test_xgboost_accuracy_threshold(self):
+        """Test XGBoost model achieves minimum accuracy"""
+        accuracy = train_xgboost_model()
+        assert accuracy >= 0.90, f"XGBoost accuracy {accuracy:.2%} is below 90% threshold"
+
+    def test_xgboost_file_created(self):
+        """Test XGBoost model file is created"""
+        train_xgboost_model()
+        assert os.path.exists("models/iris_xgboost.pkl")
+        assert os.path.getsize("models/iris_xgboost.pkl") > 0
+
+    def test_xgboost_can_be_loaded(self):
+        """Test XGBoost model can be loaded"""
+        train_xgboost_model()
+        with open("models/iris_xgboost.pkl", "rb") as f:
+            model = pickle.load(f)
+        assert isinstance(model, xgb.XGBClassifier)
+
+    def test_xgboost_prediction(self):
+        """Test XGBoost model prediction"""
+        train_xgboost_model()
+        with open("models/iris_xgboost.pkl", "rb") as f:
+            model = pickle.load(f)
+            
+        iris = load_iris()
+        X_sample = iris.data[:5]
+        predictions = model.predict(X_sample)
+        probabilities = model.predict_proba(X_sample)
+        
+        assert len(predictions) == 5
+        assert all(pred in [0, 1, 2] for pred in predictions)
+        assert probabilities.shape == (5, 3)
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
